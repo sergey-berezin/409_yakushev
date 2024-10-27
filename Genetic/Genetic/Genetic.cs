@@ -3,6 +3,8 @@ using System.Collections;
 using System.Drawing;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Genetic
 {
@@ -97,12 +99,17 @@ namespace Genetic
             {
                 pop.AddGen(this.GenRndPath());
             }
-            for (int i = 0; i < gen_count; ++i)
+            for(int i = 0; i < gen_count; i++)
             {
+                if (Console.KeyAvailable)
+                {
+                    Console.ReadKey(true);
+                    break;
+                }
                 var bestPath = this.GetBestPath();
                 var new_pop = new Population();
                 new_pop.AddGen(bestPath);
-                for (int j = 0; j < max_pop; j++)
+                Parallel.For(0, max_pop, j =>
                 {
                     var parnt1 = pop[rnd.Next(pop.GetSize())];
                     var parnt2 = pop[rnd.Next(pop.GetSize())];
@@ -114,7 +121,8 @@ namespace Genetic
                     var child2 = Crossover(parnt2, parnt1);
                     new_pop.AddGen(Mutate(child1));
                     new_pop.AddGen(Mutate(child2));
-                }
+                    Console.WriteLine(i);
+                });
                 pop = Survive(new_pop, max_pop);
 
             }

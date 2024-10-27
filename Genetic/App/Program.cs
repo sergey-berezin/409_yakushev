@@ -14,12 +14,12 @@ public class Program
             {100, 100, 100, 1, 0, 150 },
             {100, 100, 100, 100, 150, 0 }
         };
-        Console.WriteLine("write number of cities(if want to use default write \"0\"");
+        Console.WriteLine("write number of cities(if want to use default write) \"0\"");
         int cities_num = Int32.Parse(Console.ReadLine());
         if(cities_num == 0 )
         {
             Genetic.Genetic gen = new Genetic.Genetic(graph);
-            Console.WriteLine(gen.Calculate(50, 5));
+            Console.WriteLine(gen.Calculate(50, 5000000));
         }
         else {
             Console.WriteLine("write graph number <-> Line:");
