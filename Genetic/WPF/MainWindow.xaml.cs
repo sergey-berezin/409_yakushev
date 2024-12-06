@@ -16,24 +16,20 @@ using System.Windows.Shapes;
 using Genetic;
 using WPF;
 
-
 namespace WPF
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
         public ViewData data;
         public double[,] matrix;
         public CancellationTokenSource cts;
+
         public MainWindow()
         {
             InitializeComponent();
             data = new ViewData();
             matrix = new double[1, 1];
-            CommandBinding cmb = new CommandBinding();
-
+            DataContext = data;
         }
 
         private void RandomizeMatrixButton_Click(object sender, RoutedEventArgs e)
@@ -94,21 +90,35 @@ namespace WPF
             DistanceMatrixGrid.ItemsSource = matrixRows;
         }
 
-        private void StartButton_Click(object sender, RoutedEventArgs e)
+        private async void StartButton_Click(object sender, RoutedEventArgs e)
         {
             cts = new CancellationTokenSource();
             StopButton.IsEnabled = true;
-            data.procces(cts.Token, matrix);
+            StartButton.IsEnabled = false;
+            await data.ProcessAsync(cts.Token, matrix);
+            UpdateUI();
         }
 
         private void StopButton_Click(object sender, RoutedEventArgs e)
         {
-            // Здесь будет код остановки алгоритма
+            data.StopProcess();
+            StartButton.IsEnabled = true;
+            StopButton.IsEnabled = false;
+            UpdateUI();
         }
 
         private void ClearButton_Click(object sender, RoutedEventArgs e)
         {
-            // Здесь будет код очистки результатов
+            BestPathTextBox.Clear();
+            BestFitnessTextBox.Clear();
+            data.OutputData.Clear();
+            data.Res.Clear();
+        }
+
+        private void UpdateUI()
+        {
+            BestPathTextBox.Text = data.BestPath;
+            BestFitnessTextBox.Text = data.BestFitness.ToString();
         }
     }
 }

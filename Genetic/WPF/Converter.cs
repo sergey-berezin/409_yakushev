@@ -1,50 +1,57 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Data;
-
 
 namespace WPF
 {
     public class CityNConverter : IValueConverter
     {
-        public object? Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        { 
-            return value.ToString();
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return value?.ToString();
         }
+
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            int cityN = (int)value;
-            return cityN;
+            if (int.TryParse(value?.ToString(), out int cityN))
+            {
+                return cityN;
+            }
+            return 0;
         }
     }
 
     public class GenCountConverter : IValueConverter
     {
-        public object? Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            return value.ToString();
+            return value?.ToString();
         }
-        public object? ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            int gencount = (int)value;
-            return gencount;
-        }
-    }
-    public class MaxPopConverter : IValueConverter
-    {
-        public object? Convert(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            return value.ToString();
-        }
-        public object? ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
-        {
-            int maxpop = (int)value;
-            return maxpop;
+            if (int.TryParse(value?.ToString(), out int gencount))
+            {
+                return gencount;
+            }
+            return 0;
         }
     }
 
+    public class MaxPopConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return value?.ToString();
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (int.TryParse(value?.ToString(), out int maxpop))
+            {
+                return maxpop;
+            }
+            return 0;
+        }
+    }
 }

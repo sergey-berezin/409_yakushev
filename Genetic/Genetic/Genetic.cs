@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Drawing;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -43,6 +44,7 @@ namespace Genetic
         }
         public bool Equals(Path other)
         {
+            if (other == null) return false;
             for (int i = 0; i < vertices.Count;i++)
             {
                 if (other.vertices[i] != vertices[i]) 
@@ -91,7 +93,7 @@ namespace Genetic
             graph = new double[0,0];
             graph_size = 0;
         }
-        public Path Calculate(int max_pop = 100, int gen_count = 100)
+        public Path Calculate(CancellationToken cts, int max_pop = 100, int gen_count = 100)
         {
             Random rnd = new Random();
             int start_pop = max_pop / 2;
@@ -101,14 +103,16 @@ namespace Genetic
             }
             for(int i = 0; i < gen_count; i++)
             {
-                if (Console.KeyAvailable)
-                {
-                    Console.ReadKey(true);
-                    break;
-                }
+                //if (Console.KeyAvailable)
+                //{
+                //    Console.ReadKey(true);
+                //    break;
+                //}
                 var bestPath = this.GetBestPath();
-                var new_pop = new Population();
-                new_pop.AddGen(bestPath);
+                //var new_pop = new Population();
+                //new_pop.AddGen(bestPath);
+                ConcurrentBag<Path> new_pop = new ConcurrentBag<Path>();
+                new_pop.Add(bestPath);
                 Parallel.For(0, max_pop, j =>
                 {
                     var parnt1 = pop[rnd.Next(pop.GetSize())];
@@ -119,11 +123,17 @@ namespace Genetic
                     }
                     var child1 = Crossover(parnt1, parnt2);
                     var child2 = Crossover(parnt2, parnt1);
-                    new_pop.AddGen(Mutate(child1));
-                    new_pop.AddGen(Mutate(child2));
+                    new_pop.Add(Mutate(child1));
+                    new_pop.Add(Mutate(child2));
                     Console.WriteLine(i);
                 });
-                pop = Survive(new_pop, max_pop);
+                List<Path> tmp = new List<Path>(new_pop);
+                var new_pop_ = new Population(tmp);
+                pop = Survive(new_pop_, max_pop);
+                if (cts.IsCancellationRequested)
+                {
+                    return GetBestPath();
+                }
 
             }
             return GetBestPath();
@@ -148,6 +158,7 @@ namespace Genetic
 
         public double Metric(Path path)
         {
+            if (path == null) return 0;
             double result = 0;
             for (int i = 0; i < graph_size - 1; ++i)
             {
@@ -166,6 +177,7 @@ namespace Genetic
                     path = pop[i];
                 }
             }
+            if (path == null) return GetBestPath();
             return path;
 
         }
@@ -181,6 +193,7 @@ namespace Genetic
                     path.Add(tmp);
                 }
             }
+            if (new Path(path) == null) return GenRndPath();
             return new Path(path);
         }
         public Path Mutate(Path path)

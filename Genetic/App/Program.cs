@@ -19,7 +19,8 @@ public class Program
         if(cities_num == 0 )
         {
             Genetic.Genetic gen = new Genetic.Genetic(graph);
-            Console.WriteLine(gen.Calculate(50, 5000000));
+            CancellationToken cts = new CancellationToken();
+            Console.WriteLine(gen.Calculate(cts, 50, 5000000));
         }
         else {
             Console.WriteLine("write graph number <-> Line:");
@@ -36,7 +37,8 @@ public class Program
             Console.WriteLine("write maximum generation count:");
             int gen_count = Int32.Parse(Console.ReadLine());
             Genetic.Genetic gen = new Genetic.Genetic(roads);
-            Console.WriteLine(gen.Calculate(max_pop, gen_count));
+            CancellationToken cts = new CancellationToken();
+            Console.WriteLine(gen.Calculate(cts, max_pop, gen_count));
         }
         
     }

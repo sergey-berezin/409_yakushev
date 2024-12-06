@@ -1,92 +1,133 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Xml.Linq;
-using OxyPlot;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace WPF
 {
-    public class ViewData
+    public class ViewData : INotifyPropertyChanged
     {
+        private int _cityN;
+        private int _gencount;
+        private int _maxpop;
+        private List<double> _outputData;
+        private List<string> _res;
+        private double _bestFitness;
+        private string _bestPath;
+        private CancellationTokenSource _cts;
+
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public void RaisePropertyChanged([CallerMemberName] String propertyName = "") =>
-          PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        public void RaisePropertyChanged([CallerMemberName] string propertyName = "")
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
 
         public int cityN
         {
-            get { return cityN; }
+            get { return _cityN; }
             set
             {
-                cityN = value;
-                if (PropertyChanged != null)
-                    PropertyChanged(this, new PropertyChangedEventArgs("cityN"));
+                _cityN = value;
+                RaisePropertyChanged();
             }
         }
+
         public int gencount
         {
-            get { return gencount; }
+            get { return _gencount; }
             set
             {
-                gencount = value;
-                if (PropertyChanged != null)
-                    PropertyChanged(this, new PropertyChangedEventArgs("gencount"));
+                _gencount = value;
+                RaisePropertyChanged();
             }
         }
+
         public int maxpop
         {
-            get { return maxpop; }
+            get { return _maxpop; }
             set
             {
-                maxpop = value;
-                if (PropertyChanged != null)
-                    PropertyChanged(this, new PropertyChangedEventArgs("maxpop"));
+                _maxpop = value;
+                RaisePropertyChanged();
             }
         }
+
         public List<double> OutputData
         {
-            get { return OutputData; }
+            get { return _outputData; }
             set
             {
-                OutputData = value;
-                if (PropertyChanged != null)
-                    PropertyChanged(this, new PropertyChangedEventArgs("OutputData"));
+                _outputData = value;
+                RaisePropertyChanged();
             }
         }
+
         public List<string> Res
         {
-            get { return Res; }
+            get { return _res; }
             set
             {
-                Res = value;
-                if (PropertyChanged != null)
-                    PropertyChanged(this, new PropertyChangedEventArgs("Res"));
+                _res = value;
+                RaisePropertyChanged();
             }
         }
-        public void procces(CancellationToken cts, double[,] matrix)
-        {
-            OutputData = new List<double>();
-            var gen = new Genetic.Genetic(matrix);
-            var bestPath = gen.Calculate(maxpop, gencount);
 
+        public double BestFitness
+        {
+            get { return _bestFitness; }
+            set
+            {
+                _bestFitness = value;
+                RaisePropertyChanged();
+            }
         }
 
+        public string BestPath
+        {
+            get { return _bestPath; }
+            set
+            {
+                _bestPath = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        public ViewData()
+        {
+            OutputData = new List<double>();
+            Res = new List<string>();
+        }
+
+        public async Task ProcessAsync(CancellationToken cts, double[,] matrix)
+        {
+            _cts = CancellationTokenSource.CreateLinkedTokenSource(cts);
+            OutputData = new List<double>();
+            var gen = new Genetic.Genetic(matrix);
+            var bestPath = await Task.Factory.StartNew(() =>  gen.Calculate(_cts.Token, maxpop, gencount), _cts.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+
+            // StartNew flag LongRunning
+            BestPath = bestPath.ToString();
+            BestFitness = gen.Metric(bestPath);
+            RaisePropertyChanged(nameof(Res));
+
+            
+        }
+
+        public void StopProcess()
+        {
+            _cts?.Cancel();
+        }
     }
+
     public class Result
     {
         public int curgen;
         public string curbestpath;
         public string metric;
+
         public Result(int curg, string cur, string m)
         {
             curgen = curg;
@@ -98,7 +139,5 @@ namespace WPF
         {
             return "Generation:" + curgen + " " + metric + " " + curbestpath;
         }
-
-
     }
 }
